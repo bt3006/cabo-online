@@ -27,7 +27,7 @@ if not st.session_state.namen_eingegeben:
     if st.button("Bestätigen"):
         st.session_state.name[aktueller_spieler - 1] = eingabe_name
         st.session_state.namen_eingegeben = True
-        st.experimental_rerun()
+        st.rerun()
     st.stop()
 
 # Deck & Hände initialisieren
@@ -80,7 +80,7 @@ if st.session_state.startspieler is None:
             st.session_state.startspieler = 1
 
         st.session_state.dran = st.session_state.startspieler
-        st.experimental_rerun()
+        st.rerun()
     else:
         st.stop()
 # -----------------------------
@@ -96,7 +96,7 @@ if len(st.session_state.gesehen[aktueller_spieler - 1]) < 2:
         else:
             if st.button(f"Karte {i} ansehen", key=f"sehen_{i}_{aktueller_spieler}"):
                 gesehen.add(i)
-                st.experimental_rerun()
+                st.rerun()
     st.stop()
 else:
     st.info("🕵️ Karten wieder verdeckt.")
@@ -115,7 +115,7 @@ if st.button("Karte nehmen", key=f"karte_{aktueller_spieler}"):
         gez = ziehe_karte(st.session_state.deck, ablage)
         st.session_state.gezogen = gez
         st.session_state.von_wo = "ziehstapel"
-    st.experimental_rerun()
+    st.rerun()
 
 if "gezogen" in st.session_state:
     gez = st.session_state.gezogen
@@ -131,7 +131,7 @@ if "gezogen" in st.session_state:
             ablage.append(alt)
             del st.session_state["gezogen"]
             st.success(f"Tausch erfolgreich: {alt} → {gez}")
-            st.experimental_rerun()
+            st.rerun()
 
     elif aktion == "Ablegen":
         ablage.append(gez)
@@ -150,7 +150,7 @@ if "gezogen" in st.session_state:
         else:
             st.info("Keine Fähigkeit – Karte kam nicht vom Ablagestapel.")
         del st.session_state["gezogen"]
-        st.experimental_rerun()
+        st.rerun()
 
     elif aktion == "Mehrere ablegen":
         pos_liste = st.text_input("Positionen mit gleichem Wert (z. B. 0,2)", key=f"multi_{aktueller_spieler}")
@@ -164,13 +164,13 @@ if "gezogen" in st.session_state:
                     ablage.append(gez)
                     del st.session_state["gezogen"]
                     st.success("Karten korrekt abgelegt.")
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.warning("Falscher Wert – Strafkarte erhalten.")
                     hand.append(gez)
                     random.shuffle(hand)
                     del st.session_state["gezogen"]
-                    st.experimental_rerun()
+                    st.rerun()
             except:
                 st.error("Fehlerhafte Eingabe.")
 # -----------------------------
@@ -214,4 +214,4 @@ if "cabo" in st.session_state and "letzter_zug" in st.session_state and aktuelle
     if st.button("🔁 Neues Spiel starten"):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
-        st.experimental_rerun()
+        st.rerun()
