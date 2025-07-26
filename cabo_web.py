@@ -56,3 +56,79 @@ st.markdown(f"## Deine Karten:")
 st.write(zeige_karten(spieler_hand, sichtbare_karten))
 
 # Weitere Spiellogik (ziehen, tauschen etc.) folgt im nächsten Schritt
+# Nächster Spieler am Zug
+if st.session_state.am_zug != aktueller_spieler:
+    st.info("⏳ Du bist nicht am Zug. Warte, bis du dran bist.")
+    st.stop()
+
+st.markdown("## Dein Zug")
+
+# Karte ziehen oder Ablage nehmen
+aktion = st.radio("Wähle eine Aktion:", ["Ziehen vom Stapel", "Oberste Karte vom Ablagestapel nehmen"])
+if "gezogene_karte" not in st.session_state:
+    if st.button("Karte nehmen"):
+        if aktion == "Ziehen vom Stapel":
+            if not st.session_state.deck:
+                st.session_state.deck = st.session_state.ablagestapel[:-1]
+                random.shuffle(st.session_state.deck)
+                st.session_state.ablagestapel = [st.session_state.ablagestapel[-1]]
+            gez = st.session_state.deck.pop()
+            st.session_state.gezogene_karte = gez
+            st.session_state.von_ablagestapel = False
+        else:
+            gez = st.session_state.ablagestapel.pop()
+            st.session_state.gezogene_karte = gez
+            st.session_state.von_ablagestapel = True
+        st.rerun()
+
+# Wenn Karte gezogen wurde – nächste Aktion
+if "gezogene_karte" in st.session_state:
+    gez = st.session_state.gezogene_karte
+    st.success(f"Du hast gezogen: [{gez}]")
+
+    wahl = st.radio("Was möchtest du tun?", ["Tauschen", "Ablegen", "Mehrere Karten abwerfen"])
+
+    if wahl == "Tauschen":
+        pos = st.number_input("Welche deiner Karten willst du tauschen? (0–3)", min_value=0, max_value=3, step=1)
+        if st.button("Tauschen bestätigen"):
+            alt = spieler_hand[pos]
+            spieler_hand[pos] = gez
+            st.session_state.ablagestapel.append(alt)
+            st.session_state.gezogene_karte = None
+            st.session_state.am_zug = 2 if aktueller_spieler == 1 else 1
+            st.rerun()
+
+    elif wahl == "Ablegen":
+        st.session_state.ablagestapel.append(gez)
+        # Wenn Karte vom Stapel und mit Fähigkeit
+        if not st.session_state.von_ablagestapel and gez in [7, 8]:
+            pos = st.number_input("Welche eigene Karte willst du anschauen? (0–3)", min_value=0, max_value=3, step=1)
+            st.info(f"Deine Karte an Position {pos}: [{spieler_hand[pos]}]")
+            if pos not in sichtbare_karten:
+                sichtbare_karten.append(pos)
+
+        elif not st.session_state.von_ablagestapel and gez in [9, 10]:
+            st.warning("🔍 Gegnerkarte ansehen – noch nicht umgesetzt.")
+        elif not st.session_state.von_ablagestapel and gez in [11, 12]:
+            st.warning("♻️ Karten tauschen – noch nicht umgesetzt.")
+
+        st.session_state.gezogene_karte = None
+        st.session_state.am_zug = 2 if aktueller_spieler == 1 else 1
+        st.rerun()
+
+    elif wahl == "Mehrere Karten abwerfen":
+        gleiche_pos = st.multiselect("Welche deiner Karten willst du abwerfen?", options=[0, 1, 2, 3])
+        if len(gleiche_pos) >= 1:
+            werte = [spieler_hand[i] for i in gleiche_pos]
+            if all(w == gez for w in werte):
+                st.success("✅ Alles korrekt! Karten werden abgelegt.")
+                for i in sorted(gleiche_pos, reverse=True):
+                    st.session_state.ablagestapel.append(spieler_hand.pop(i))
+                st.session_state.ablagestapel.append(gez)
+            else:
+                st.error("❌ Nicht alle Karten passen – Strafkarte wird hinzugefügt.")
+                spieler_hand.append(gez)
+                random.shuffle(spieler_hand)
+            st.session_state.gezogene_karte = None
+            st.session_state.am_zug = 2 if aktueller_spieler == 1 else 1
+            st.rerun()
